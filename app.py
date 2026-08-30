@@ -7,7 +7,7 @@ Two modes, picked from the sidebar:
                                (outputs/signals.csv, produced by main.py)
 """
 from __future__ import annotations
-
+import streamlit as st
 import json
 
 import pandas as pd
@@ -20,7 +20,27 @@ from mathematical_models import build_model, refresh_with_live_price, add_foreca
 
 st.set_page_config(page_title=config.PAGE_TITLE, page_icon=config.PAGE_ICON, layout="wide")
 
+def check_password() -> bool:
+    """ตรวจสอบรหัสผ่านก่อนเข้าใช้งาน"""
+    if st.session_state.get("authenticated", False):
+        return True
 
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown("### 🔒 เข้าสู่ระบบ Dashboard")
+        pwd = st.text_input("กรุณากรอกรหัสผ่านเข้าใช้งาน", type="password")
+        if st.button("เข้าสู่ระบบ", use_container_width=True):
+            # ดึงรหัสผ่านจาก Secrets (หากไม่มีจะใช้ client123 เป็นค่าสำรอง)
+            valid_pwd = st.secrets.get("APP_PASSWORD", "client123")
+            if pwd == valid_pwd:
+                st.session_state["authenticated"] = True
+                st.rerun()
+            else:
+                st.error("❌ รหัสผ่านไม่ถูกต้อง")
+    return False
+
+if not check_password():
+    st.stop()
 # ----------------------------------------------------------------------
 # Favorites persistence (outputs/favorites.json)
 # ----------------------------------------------------------------------
